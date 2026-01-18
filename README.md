@@ -1,3 +1,3 @@
 # facebook
 
-A Facebook Clone flutter app
+A Facebook Clone app
