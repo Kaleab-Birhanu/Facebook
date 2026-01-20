@@ -10,9 +10,21 @@ class ProfilePage extends StatelessWidget {
         // Cover photo
         Container(
           height: 200,
-          color: Colors.grey[300],
-          child: const Center(
-            child: Icon(Icons.camera_alt, size: 50, color: Colors.grey),
+          decoration: const BoxDecoration(),
+          child: ClipRRect(
+            child: Image.asset(
+              'assets/images/cover_photo.webp',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Icon(Icons.camera_alt, size: 50, color: Colors.grey),
+                  ),
+                );
+              },
+            ),
           ),
         ),
         // Profile info
@@ -139,7 +151,7 @@ class ProfilePage extends StatelessWidget {
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
                 ),
-                itemCount: 6,
+                itemCount: 3,
                 itemBuilder: (context, index) {
                   return _buildFriendItem('Friend ${index + 1}');
                 },

@@ -31,7 +31,6 @@ class MarketplacePage extends StatelessWidget {
             children: [
               _buildCategoryChip('All', true),
               _buildCategoryChip('Vehicles', false),
-              _buildCategoryChip('Property Rentals', false),
               _buildCategoryChip('Electronics', false),
               _buildCategoryChip('Furniture', false),
             ],
@@ -58,12 +57,39 @@ class MarketplacePage extends StatelessWidget {
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
-          itemCount: 8,
+          itemCount: 4,
           itemBuilder: (context, index) {
+            final items = [
+              {
+                'title': 'Used Toyota Car',
+                'price': '\$15,500',
+                'location': 'Addis Ababa, Mexico',
+                'image': 'item1.jpg',
+              },
+              {
+                'title': 'Affordable Bed',
+                'price': '\$299',
+                'location': 'Addis Ababa, Piassa',
+                'image': 'item2.jpg',
+              },
+              {
+                'title': 'iPhone 12, 128GB',
+                'price': '\$599',
+                'location': 'Addis Ababa, Meskel Square',
+                'image': 'item3.jpg',
+              },
+              {
+                'title': 'AirPod Pro 2nd Generation',
+                'price': '\$199',
+                'location': 'Addis Ababa, Magenagna',
+                'image': 'item4.jpg',
+              },
+            ];
             return _buildMarketplaceItem(
-              'Item ${index + 1}',
-              '\$${(index + 1) * 50}',
-              'Location ${index + 1}',
+              items[index]['title']!,
+              items[index]['price']!,
+              items[index]['location']!,
+              items[index]['image']!,
             );
           },
         ),
@@ -75,22 +101,25 @@ class MarketplacePage extends StatelessWidget {
     return Chip(
       label: Text(
         label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.black87,
-        ),
+        style: TextStyle(color: isSelected ? Colors.white : Colors.black87),
       ),
       backgroundColor: isSelected ? const Color(0xFF1877F2) : Colors.grey[200],
     );
   }
 
-  Widget _buildMarketplaceItem(String title, String price, String location) {
+  Widget _buildMarketplaceItem(
+    String title,
+    String price,
+    String location,
+    String imageName,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             spreadRadius: 1,
             blurRadius: 3,
           ),
@@ -101,12 +130,26 @@ class MarketplacePage extends StatelessWidget {
         children: [
           Container(
             height: 140,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
             ),
-            child: const Center(
-              child: Icon(Icons.image, size: 50, color: Colors.grey),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(8),
+              ),
+              child: Image.asset(
+                'assets/images/$imageName',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 140,
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(Icons.image, size: 50, color: Colors.grey),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           Padding(

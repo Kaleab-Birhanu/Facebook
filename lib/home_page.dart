@@ -93,8 +93,58 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class _HomeTab extends StatelessWidget {
+class _HomeTab extends StatefulWidget {
   const _HomeTab();
+
+  @override
+  State<_HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<_HomeTab> {
+  // State for posts - [isLiked, likeCount, commentCount, showComments]
+  final Map<String, Map<String, dynamic>> _postStates = {
+    'jane_beach': {
+      'isLiked': false,
+      'likeCount': 124,
+      'commentCount': 23,
+      'showComments': false,
+      'comments': <String>[],
+    },
+    'john_project': {
+      'isLiked': false,
+      'likeCount': 89,
+      'commentCount': 15,
+      'showComments': false,
+      'comments': <String>[],
+    },
+  };
+
+  final TextEditingController _commentController = TextEditingController();
+
+  void _toggleLike(String postId) {
+    setState(() {
+      final post = _postStates[postId]!;
+      post['isLiked'] = !post['isLiked'];
+      post['likeCount'] += post['isLiked'] ? 1 : -1;
+    });
+  }
+
+  void _toggleComments(String postId) {
+    setState(() {
+      _postStates[postId]!['showComments'] =
+          !_postStates[postId]!['showComments'];
+    });
+  }
+
+  void _addComment(String postId, String comment) {
+    if (comment.trim().isNotEmpty) {
+      setState(() {
+        _postStates[postId]!['comments'].add(comment);
+        _postStates[postId]!['commentCount']++;
+      });
+      _commentController.clear();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,8 +163,6 @@ class _HomeTab extends StatelessWidget {
                 _buildCreateStory(),
                 _buildStoryItem('Friend 1', Colors.blue),
                 _buildStoryItem('Friend 2', Colors.green),
-                _buildStoryItem('Friend 3', Colors.orange),
-                _buildStoryItem('Friend 4', Colors.purple),
               ],
             ),
           ),
@@ -165,16 +213,21 @@ class _HomeTab extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         // Sample posts
-        _buildPost('John Doe', '2h', 'Beautiful day at the beach! 🌊☀️', true),
-        const SizedBox(height: 8),
         _buildPost(
+          'jane_beach',
           'Jane Smith',
-          '5h',
-          'Just finished my new project! Feeling accomplished 💪',
+          '2h',
+          'Beautiful day at the beach! 🌊☀️',
           true,
         ),
         const SizedBox(height: 8),
-        _buildPost('Mike Johnson', '8h', 'Coffee time ☕', false),
+        _buildPost(
+          'john_project',
+          'John Doe',
+          '5h',
+          'Just finished my new project! Feeling accomplished 💪',
+          false,
+        ),
       ],
     );
   }
@@ -248,7 +301,7 @@ class _HomeTab extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [color.withOpacity(0.7), color],
+          colors: [color.withValues(alpha: 0.7), color],
         ),
       ),
       child: Stack(
@@ -296,7 +349,14 @@ class _HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildPost(String user, String time, String content, bool hasImage) {
+  Widget _buildPost(
+    String postId,
+    String user,
+    String time,
+    String content,
+    bool hasImage,
+  ) {
+    final postState = _postStates[postId]!;
     return Container(
       color: Colors.white,
       child: Column(
@@ -344,9 +404,25 @@ class _HomeTab extends StatelessWidget {
             const SizedBox(height: 12),
             Container(
               height: 300,
-              color: Colors.grey[300],
-              child: const Center(
-                child: Icon(Icons.image, size: 80, color: Colors.grey),
+              width: double.infinity,
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/beach.png',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: 300,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 300,
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.image, size: 80, color: Colors.grey),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],
@@ -368,9 +444,15 @@ class _HomeTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                Text('124', style: TextStyle(color: Colors.grey[600])),
+                Text(
+                  '${postState['likeCount']}',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
                 const Spacer(),
-                Text('23 comments', style: TextStyle(color: Colors.grey[600])),
+                Text(
+                  '${postState['commentCount']} comments',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
                 const SizedBox(width: 12),
                 Text('5 shares', style: TextStyle(color: Colors.grey[600])),
               ],
@@ -382,23 +464,137 @@ class _HomeTab extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildPostAction(Icons.thumb_up_outlined, 'Like'),
-                _buildPostAction(Icons.comment_outlined, 'Comment'),
-                _buildPostAction(Icons.share_outlined, 'Share'),
+                _buildPostAction(
+                  postState['isLiked']
+                      ? Icons.thumb_up
+                      : Icons.thumb_up_outlined,
+                  'Like',
+                  postState['isLiked']
+                      ? const Color(0xFF1877F2)
+                      : Colors.grey[700]!,
+                  () => _toggleLike(postId),
+                ),
+                _buildPostAction(
+                  Icons.comment_outlined,
+                  'Comment',
+                  Colors.grey[700]!,
+                  () => _toggleComments(postId),
+                ),
+                _buildPostAction(
+                  Icons.share_outlined,
+                  'Share',
+                  Colors.grey[700]!,
+                  () {},
+                ),
               ],
             ),
           ),
+          // Comments section
+          if (postState['showComments']) ...[
+            const Divider(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Column(
+                children: [
+                  // Existing comments
+                  ...postState['comments']
+                      .map<Widget>(
+                        (comment) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Colors.grey,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(comment),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  // Comment input
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Colors.grey,
+                          child: Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _commentController,
+                            decoration: InputDecoration(
+                              hintText: 'Write a comment...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                            ),
+                            onSubmitted: (comment) =>
+                                _addComment(postId, comment),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.send,
+                            color: Color(0xFF1877F2),
+                          ),
+                          onPressed: () =>
+                              _addComment(postId, _commentController.text),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
         ],
       ),
     );
   }
 
-  Widget _buildPostAction(IconData icon, String label) {
+  Widget _buildPostAction(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onPressed,
+  ) {
     return TextButton.icon(
-      onPressed: () {},
-      icon: Icon(icon, color: Colors.grey[700]),
-      label: Text(label, style: TextStyle(color: Colors.grey[700])),
+      onPressed: onPressed,
+      icon: Icon(icon, color: color),
+      label: Text(label, style: TextStyle(color: color)),
     );
   }
 }
